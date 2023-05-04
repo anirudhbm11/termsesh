@@ -7,6 +7,8 @@
 
 void record_pwd(char[]);
 void saveSession(char *);
+char* get_current_shell();
+FILE* run_shell_command();
 
 int main(int argc, char *argv[]){
 	//Flag used to record name of the session which is to be saved
@@ -33,11 +35,12 @@ int main(int argc, char *argv[]){
 
 void saveSession(char* sessionName){
 	/*
-	Funtion used to store sesisons.
+	Function used to store sesisons.
 	*/
 	FILE *fp;
 	char dir_path[50] = "./sessions/";
 	char util_file_path[100];
+	char *shell;
 
 	strcat(dir_path,sessionName);
 	int create_session = mkdir(dir_path, 0777);
@@ -51,6 +54,38 @@ void saveSession(char* sessionName){
 
 	// Used to record present working directory
 	record_pwd(util_file_path);
+
+	// Get the current used shell
+	shell = get_current_shell();
+	
+	if(shell == NULL){
+		printf("Unimplemented shell....");
+		exit(1);
+	}else if(strcmp(shell, "zsh") == 0){
+		printf("ZSH shell\n");
+	}else{
+		printf("Unimplemented shell....");
+		exit(1);
+	}
+
+}
+
+FILE* run_shell_command(FILE* commandFP, char* command){
+	commandFP = popen(command, "r");
+
+	return commandFP;
+}
+
+char* get_current_shell(){
+	char *shell = getenv("SHELL");
+
+	if(strcmp(shell, "/bin/zsh") == 0){
+		return "zsh";
+	}else if(strcmp(shell, "/bin/bash") == 0){
+		return "bash";
+	}else{
+		return NULL;
+	}
 }
 
 
@@ -64,10 +99,11 @@ void record_pwd(char util_file_path[]){
 	char buffer[300];
 	char pwdfile[300];
 
-	pwdfp = popen("pwd","r");
+	pwdfp = run_shell_command(pwdfp, "pwd");
+
 	util_file = fopen(util_file_path, "w");
 	if(util_file == NULL) {
-        printf("file couldn't be opened\n");
+        printf("File couldn't be opened\n");
         exit(1);
     }
 
